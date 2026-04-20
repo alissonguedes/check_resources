@@ -1,7 +1,5 @@
 #!/bin/bash
 
-echo "===== DETECÇÃO DE APLICAÇÕES ====="
-
 tipo=()
 
 # ===== PORTAS =====
@@ -81,6 +79,5 @@ fi
 if [ ${#tipo[@]} -eq 0 ]; then
     echo "Nenhuma aplicação identificada"
 else
-    echo "Aplicações detectadas:"
-    printf ' - %s\n' "${tipo[@]}"
+    echo "Aplicações detectadas: $(printf '%s; ' "${tipo[@]}")"
 fi
