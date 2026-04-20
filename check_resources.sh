@@ -2,21 +2,21 @@
 
 # ===== CPU =====
 read model mhz socket cores tpc threads <<< $(lscpu | awk -F: '
-/Model name/ {gsub(/^[ \t]+/, "", $2); model=$2}
-/CPU MHz/ {gsub(/^[ \t]+/, "", $2); mhz=$2}
-/Socket\(s\)/ {gsub(/^[ \t]+/, "", $2); socket=$2}
-/Core\(s\) per socket/ {gsub(/^[ \t]+/, "", $2); cores=$2}
-/Thread\(s\) per core/ {gsub(/^[ \t]+/, "", $2); tpc=$2}
-/^CPU\(s\)/ {gsub(/^[ \t]+/, "", $2); threads=$2}
+/Model name/ {model=$2}
+/CPU MHz/ {mhz=$2}
+/Socket\(s\)/ {socket=$2}
+/Core\(s\) per socket/ {cores=$2}
+/Thread\(s\) per core/ {tpc=$2}
+/^CPU\(s\)/ {threads=$2}
 END {print model, mhz, socket, cores, tpc, threads}')
 
 # GHz com vírgula
-if [ -n "$mhz" ]; then
-  freq=$(awk "BEGIN {printf \"%.2f\", $mhz/1000}")
-  freq=$(echo $freq | sed 's/\./,/')
-else
-  freq="-"
-fi
+#if [ -n "$mhz" ]; then
+#  freq=$(awk "BEGIN {printf \"%.2f\", $mhz/1000}")
+#  freq=$(echo $freq | sed 's/\./,/')
+#else
+#  freq="-"
+#fi
 
 # ===== MEMÓRIA =====
 read ram swap <<< $(free -h | awk '
@@ -25,8 +25,8 @@ read ram swap <<< $(free -h | awk '
 END {print ram, swap}')
 
 # padronizar Gi + vírgula
-ram=$(echo $ram | sed 's/G/Gi/; s/\./,/')
-swap=$(echo $swap | sed 's/G/Gi/; s/\./,/')
+ram=$(echo $ram)
+swap=$(echo $swap)
 
 # ===== DISCO ROOT =====
 read rt ru rf rp <<< $(df -h | awk '$NF=="/" {print $2, $3, $4, $5}')
