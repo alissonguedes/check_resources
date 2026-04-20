@@ -2,12 +2,12 @@
 
 # CPU
 read model mhz socket cores tpc threads <<< $(lscpu | awk -F: '
-/Model name/ {gsub(/^[ \t]+/, "", $2); model=$2}
+/Model name/ {model=$2}
 /CPU Mhz/ {mhz=$2}
-/Socket\(s\)/ {gsub(/^[ \t]+/, "", $2); socket=$2}
-/Core\(s\) per socket/ {gsub(/^[ \t]+/, "", $2); cores=$2}
-/Thread\(s\) per core/ {gsub(/^[ \t]+/, "", $2); tpc=$2}
-/^CPU\(s\)/ {gsub(/^[ \t]+/, "", $2); threads=$2}
+/Socket\(s\)/ {socket=$2}
+/Core\(s\) per socket/ {cores=$2}
+/Thread\(s\) per core/ {tpc=$2}
+/^CPU\(s\)/ {threads=$2}
 END {print model, mhz, socket, cores, tpc, threads}')
 
 # Converter MHz → GHz (fallback caso não exista)
