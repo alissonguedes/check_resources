@@ -66,7 +66,7 @@ if [ "$types" -gt 1 ]; then
 else
   # homogêneo
   threads_per_core=$(awk "BEGIN {printf \"%.2f\", $threads/$cores}")
-  tpc_desc=$threads_per_core
+  tpc_desc=$(echo $threads_per_core | sed 's/\./,/')
 fi
 
 # ===== MEMÓRIA =====
