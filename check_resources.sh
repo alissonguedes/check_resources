@@ -52,5 +52,8 @@ fi
 host=$(hostname -f)
 ip=$(hostname -I | awk '{print $1}')
 
+# ===== DESCRIÇÃO DE SERVIÇOS =====
+services="---Descrição dos serviços---"
+
 # ===== SAÍDA FINAL =====
-echo -e "$host\t$ip\t$model\t$freq\t$socket\t$cores\t$tpc\t$threads\t$ram\t$swap\t$rt\t$ru\t$rf\t$rp\t$bt\t$bu\t$bf\t$bp"
+echo -e "$host\t$ip\t$services\t$model\t$freq\t$socket\t$cores\t$tpc\t$threads\t$ram\t$swap\t$rt\t$ru\t$rf\t$rp\t$bt\t$bu\t$bf\t$bp"
