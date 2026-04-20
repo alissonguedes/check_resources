@@ -99,7 +99,8 @@ host=$(hostname -f)
 ip=$(hostname -I | awk '{print $1}')
 
 # ===== DETECÇÃO DE TIPO DE APLICAÇÕES QUE RODAM NO SERVIDOR ====
-services=$(curl -s https://raw.githubusercontent.com/alissonguedes/check_resources/main/check_server_type.sh | bash)
+#services=$(curl -s https://raw.githubusercontent.com/alissonguedes/check_resources/main/check_server_type.sh | bash)
+services="---Descrição dos serviços---"
 
 # ===== SAÍDA =====
 echo -e "$host\t$ip\t$services\t$model\t$freq\t$socket\t$cores\t$tpc_desc\t$threads\t$ram\t$swap\t$rt\t$ru\t$rf\t$rp\t$bt\t$bu\t$bf\t$bp"
