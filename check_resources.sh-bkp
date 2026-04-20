@@ -1,0 +1,91 @@
+#!/bin/bash
+
+# ===== CPU =====
+#read model mhz socket cores tpc threads <<< $(lscpu | awk -F: '
+#/Model name/ {model=$2}
+#/CPU MHz/ {mhz=$2}
+#/Socket\(s\)/ {socket=$2}
+#/Core\(s\) per socket/ {cores=$2}
+#/Thread\(s\) per core/ {tpc=$2}
+#/^CPU\(s\)/ {threads=$2}
+#END {print model, mhz, socket, cores, tpc, threads}')
+
+# GHz com vírgula
+#if [ -n "$mhz" ]; then
+#  freq=$(awk "BEGIN {printf \"%.2f\", $mhz/1000}")
+#  freq=$(echo $freq | sed 's/\./,/')
+#else
+#  freq="-"
+#fi
+IFS='|' read -r model mhz socket cores threads <<< "$(
+  awk -F: '
+    /model name/ {model=$2}
+    /cpu MHz/ {mhz=$2}
+    /physical id/ {socket=$2}
+    /cpu cores/ {cores=$2}
+    /siblings/ {threads=$2}
+    END {
+      gsub(/^[ \t]+|[ \t]+$/, "", model)
+      gsub(/^[ \t]+|[ \t]+$/, "", mhz)
+      gsub(/^[ \t]+|[ \t]+$/, "", socket)
+      gsub(/^[ \t]+|[ \t]+$/, "", cores)
+      gsub(/^[ \t]+|[ \t]+$/, "", threads)
+      print model "|" mhz "|" socket "|" cores "|" threads
+    }
+  ' /proc/cpuinfo
+)"
+
+#GHz com vírgula
+if [ -n "$mhz" ]
+then
+	freq=$(awk "BEGIN {printf  \"%.2f\", $mhz/1000}")
+	freq=$(echo $freq | sed 's/\./,/')
+fi
+
+# Contar threads x cores
+if [ -n "$threads" ] && [ -n "$cores" ]
+then
+	threads_per_core=$threads/$cores
+else
+	threads_per_core=1
+fi
+
+# ===== MEMÓRIA =====
+read ram swap <<< $(free -h | awk '
+/Mem:/ {ram=$2}
+/Swap:/ {swap=$2}
+END {print ram, swap}')
+
+# padronizar Gi + vírgula
+ram=$(echo $ram)
+swap=$(echo $swap)
+
+# ===== DISCO ROOT =====
+read rt ru rf rp <<< $(df -h | awk '$NF=="/" {print $2, $3, $4, $5}')
+
+# converter ponto → vírgula (somente números com decimal)
+rt=$(echo $rt | sed 's/\./,/')
+ru=$(echo $ru | sed 's/\./,/')
+rf=$(echo $rf | sed 's/\./,/')
+
+# ===== DISCO BACKUP =====
+backup=$(df -h | awk '$NF=="/backup" {print $2,$3,$4,$5}')
+
+if [ -n "$backup" ]; then
+  bt=$(echo $backup | awk '{print $1}' | sed 's/\./,/')
+  bu=$(echo $backup | awk '{print $2}' | sed 's/\./,/')
+  bf=$(echo $backup | awk '{print $3}' | sed 's/\./,/')
+  bp=$(echo $backup | awk '{print $4}')
+else
+  bt="-"; bu="-"; bf="-"; bp="-"
+fi
+
+# ===== INFO =====
+host=$(hostname -f)
+ip=$(hostname -I | awk '{print $1}')
+
+# ===== DESCRIÇÃO DE SERVIÇOS =====
+services="---Descrição dos serviços---"
+
+# ===== SAÍDA FINAL =====
+echo -e "$host\t$ip\t$services\t$model\t$freq\t$socket\t$cores\t$threads_per_core\t$threads\t$ram\t$swap\t$rt\t$ru\t$rf\t$rp\t$bt\t$bu\t$bf\t$bp"
