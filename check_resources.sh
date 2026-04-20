@@ -1,54 +1,56 @@
 #!/bin/bash
 
-# CPU
+# ===== CPU =====
 read model mhz socket cores tpc threads <<< $(lscpu | awk -F: '
-/Model name/ {model=$2}
-/CPU Mhz/ {mhz=$2}
-/Socket\(s\)/ {socket=$2}
-/Core\(s\) per socket/ {cores=$2}
-/Thread\(s\) per core/ {tpc=$2}
-/^CPU\(s\)/ {threads=$2}
+/Model name/ {gsub(/^[ \t]+/, "", $2); model=$2}
+/CPU MHz/ {gsub(/^[ \t]+/, "", $2); mhz=$2}
+/Socket\(s\)/ {gsub(/^[ \t]+/, "", $2); socket=$2}
+/Core\(s\) per socket/ {gsub(/^[ \t]+/, "", $2); cores=$2}
+/Thread\(s\) per core/ {gsub(/^[ \t]+/, "", $2); tpc=$2}
+/^CPU\(s\)/ {gsub(/^[ \t]+/, "", $2); threads=$2}
 END {print model, mhz, socket, cores, tpc, threads}')
 
-# Converter MHz → GHz (fallback caso não exista)
-#if [ -n "$mhz" ]; then
-#  freq=$(awk "BEGIN {printf \"%.2f\", $mhz/1000}")
-#else
-#  freq="N/A"
-#fi
+# GHz com vírgula
+if [ -n "$mhz" ]; then
+  freq=$(awk "BEGIN {printf \"%.2f\", $mhz/1000}")
+  freq=$(echo $freq | sed 's/\./,/')
+else
+  freq="-"
+fi
 
-# Memória (GB)
+# ===== MEMÓRIA =====
 read ram swap <<< $(free -h | awk '
 /Mem:/ {ram=$2}
 /Swap:/ {swap=$2}
 END {print ram, swap}')
 
-# Disco raiz
-read rt ru rf rp <<< $(df -h | awk '$NF=="/" {
-#  gsub(/%/,"",$5);
-  print $2, $3, $4, $5
-}')
+# padronizar Gi + vírgula
+ram=$(echo $ram | sed 's/G/Gi/; s/\./,/')
+swap=$(echo $swap | sed 's/G/Gi/; s/\./,/')
 
-# Disco backup
-backup=$(df -h | awk '$NF=="/backup" {
-#  gsub(/%/,"",$5);
-  print $2";"$3";"$4";"$5
-}')
+# ===== DISCO ROOT =====
+read rt ru rf rp <<< $(df -h | awk '$NF=="/" {print $2, $3, $4, $5}')
+
+# converter ponto → vírgula (somente números com decimal)
+rt=$(echo $rt | sed 's/\./,/')
+ru=$(echo $ru | sed 's/\./,/')
+rf=$(echo $rf | sed 's/\./,/')
+
+# ===== DISCO BACKUP =====
+backup=$(df -h | awk '$NF=="/backup" {print $2,$3,$4,$5}')
 
 if [ -n "$backup" ]; then
-  bt=$(echo $backup | cut -d';' -f1)
-  bu=$(echo $backup | cut -d';' -f2)
-  bf=$(echo $backup | cut -d';' -f3)
-  bp=$(echo $backup | cut -d';' -f4)
+  bt=$(echo $backup | awk '{print $1}' | sed 's/\./,/')
+  bu=$(echo $backup | awk '{print $2}' | sed 's/\./,/')
+  bf=$(echo $backup | awk '{print $3}' | sed 's/\./,/')
+  bp=$(echo $backup | awk '{print $4}')
 else
-  bt="N/A"; bu="N/A"; bf="N/A"; bp="N/A"
+  bt="-"; bu="-"; bf="-"; bp="-"
 fi
 
-# Info adicionais
-host=$(hostname)
+# ===== INFO =====
+host=$(hostname -f)
 ip=$(hostname -I | awk '{print $1}')
-desc="N/A"
 
-# Linha CSV (SEM cabeçalho e com ;)
-echo "$host;$ip;$desc;$model;$freq;$socket;$cores;$tpc;$threads;$ram;$swap;$rt;$ru;$rf;$rp;$bt;$bu;$bf;$bp"
-
+# ===== SAÍDA FINAL =====
+echo -e "$host\t$ip\t$model\t$freq\t$socket\t$cores\t$tpc\t$threads\t$ram\t$swap\t$rt\t$ru\t$rf\t$rp\t$bt\t$bu\t$bf\t$bp"
